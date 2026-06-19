@@ -7,12 +7,12 @@
 //   - walletStore: balance + transactions
 //   - notificationStore: in-app toasts/bell notifications
 //
-// All stores persist the auth token via the api client's setToken and read
-// the authenticated user from localStorage so a page reload keeps the
-// session.
+// The session itself lives in an HttpOnly cookie (managed by the gateway, not
+// readable by JS). We cache only the non-sensitive user object in localStorage
+// so a page reload keeps the UI logged in; the cookie carries the credential.
 
 import { createSignal } from 'solid-js';
-import { authApi, rideApi, driverApi, setToken } from '@/api/backend';
+import { authApi, rideApi, driverApi } from '@/api/backend';
 import { realtime, clearBidEvents } from '@/api/realtime';
 import { bidToDomain, fareEstimateToDetails } from '@/api/dto';
 import type {
@@ -41,8 +41,11 @@ export const authStore = {
   /** Send an OTP to a phone. Used by signup + login flows. */
   sendOtp: (phone: string) => authApi.sendOtp(phone),
 
-  /** Verify OTP and, if the user exists, establish a session. */
-  verifyOtp: async (phone: string, code: string): Promise<{ exists: boolean; error?: string }> => {
+  /**
+   * Verify OTP. If the user exists, establish a session. If not, the backend
+   * returns a short-lived enrollment_token the caller passes to signup().
+   */
+  verifyOtp: async (phone: string, code: string): Promise<{ exists: boolean; enrollmentToken?: string; error?: string }> => {
     const res = await authApi.verifyOtp(phone, code);
     if (!res.success) return { exists: false, error: res.error };
     if (res.exists && res.token && res.user) {
@@ -52,24 +55,24 @@ export const authStore = {
         role: res.user.role, isVerified: true, isActive: true,
         createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
       };
-      setToken(res.token);
+      // Session cookie is set by the gateway; we only cache the user object.
       localStorage.setItem(USER_KEY, JSON.stringify(user));
       setAuthUser(user);
     }
-    return { exists: res.exists ?? false };
+    return { exists: res.exists ?? false, enrollmentToken: res.enrollment_token };
   },
 
-  signup: async (data: { phone: string; first_name?: string; last_name?: string; role: 'rider' | 'driver'; password?: string }): Promise<{ success: boolean; error?: string }> => {
-    const res = await authApi.signup(data);
+  signup: async (data: { enrollment_token: string; phone: string; first_name?: string; last_name?: string; role: 'rider' | 'driver'; password?: string }): Promise<{ success: boolean; error?: string }> => {
+    const { phone, ...payload } = data; // phone is only for the local user object; backend takes it from the token
+    const res = await authApi.signup(payload);
     if (!res.success) return { success: false, error: res.error };
     if (res.token && res.user) {
       const user: User = {
-        id: res.user.id, email: '', phone: data.phone,
+        id: res.user.id, email: '', phone,
         firstName: data.first_name ?? '', lastName: data.last_name ?? '',
         role: res.user.role, isVerified: true, isActive: true,
         createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
       };
-      setToken(res.token);
       localStorage.setItem(USER_KEY, JSON.stringify(user));
       setAuthUser(user);
     }
@@ -85,7 +88,6 @@ export const authStore = {
       role: res.user.role, isVerified: true, isActive: true,
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     };
-    setToken(res.token);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
     setAuthUser(user);
     return { success: true };
@@ -103,7 +105,7 @@ export const authStore = {
 
   logout: () => {
     realtime.disconnect();
-    setToken(null);
+    void authApi.logout(); // clear the HttpOnly cookie server-side (best-effort)
     localStorage.removeItem(USER_KEY);
     setAuthUser(null);
   },

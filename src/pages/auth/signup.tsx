@@ -27,29 +27,18 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      // Signup with the gateway. Then send an OTP for phone verification.
-      const res = await authStore.signup({
-        phone: phone(),
+      // Secure order: verify the phone via OTP FIRST, then create the account
+      // (the gateway only accepts signup with an enrollment token proving the
+      // OTP). Stash the form so verify-otp can complete signup afterward.
+      sessionStorage.setItem('pending_phone', phone());
+      sessionStorage.setItem('pending_signup', JSON.stringify({
         first_name: firstName(),
         last_name: lastName(),
         role: role(),
         password: withPassword() ? password() : undefined,
-      });
-      if (!res.success) { toast.add(res.error ?? 'Signup failed', 'error'); return; }
+      }));
 
-      // Auto-fill name onto the user object created by the auth store.
-      authStore.updateUserFields({ firstName: firstName(), lastName: lastName() });
-
-      // If the backend issued a session token immediately, no OTP needed.
-      if (authStore.isAuthenticated()) {
-        toast.add('Account created!', 'success');
-        navigate(role() === 'driver' ? '/driver' : '/rider', { replace: true });
-        return;
-      }
-
-      // Otherwise, send an OTP and route to verification.
       await authStore.sendOtp(phone());
-      sessionStorage.setItem('pending_phone', phone());
       toast.add('Verify your phone to finish signing up', 'success');
       navigate('/verify-otp');
     } catch (e) {
@@ -97,7 +86,7 @@ export default function SignupPage() {
           </Show>
 
           <div class="flex items-start gap-2">
-            <input type="checkbox" id="terms" class="mt-1 rounded border-border" required />
+            <input type="checkbox" id="terms" class="mt-1 rounded border-border accent-primary bg-bg-input text-primary" required />
             <label for="terms" class="text-sm text-text-secondary">
               I agree to the <a href="#" class="text-primary hover:underline">Terms</a> and <a href="#" class="text-primary hover:underline">Privacy Policy</a>
             </label>

@@ -1,6 +1,6 @@
 import { createSignal, For, Show, onMount } from 'solid-js';
 import { MainLayout } from '@/layouts/main-layout';
-import { Button, Card } from '@/components/ui';
+import { Button, Card, EmptyState } from '@/components/ui';
 import { Badge } from '@/components/ui/badge';
 import { driverStore, authStore } from '@/store';
 import { realtime } from '@/api/realtime';
@@ -78,11 +78,11 @@ export default function DriverRequestsPage() {
 
   return (
     <MainLayout>
-      <div class="space-y-6">
+      <div class="page-section">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-bold text-text-primary">Ride Requests</h1>
-            <p class="text-text-secondary">{requests().length} pending requests</p>
+            <h1 class="heading-page text-2xl font-bold text-text-primary">Ride Requests</h1>
+            <p class="text-text-secondary mt-2">{requests().length} pending requests</p>
           </div>
           <Badge variant={requests().length > 0 ? 'warning' : 'ghost'} size="lg" dot={requests().length > 0}>
             {requests().length} New
@@ -90,19 +90,15 @@ export default function DriverRequestsPage() {
         </div>
 
         <Show when={requests().length > 0} fallback={
-          <div class="text-center py-20">
-            <div class="w-20 h-20 rounded-full bg-surface-variant flex items-center justify-center mx-auto mb-4">
-              <svg class="w-10 h-10 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-              </svg>
-            </div>
-            <h2 class="text-xl font-semibold text-text-primary">No requests right now</h2>
-            <p class="text-text-secondary mt-1">New ride requests will appear here</p>
-          </div>
+          <EmptyState
+            illustration="requests"
+            title="No requests right now"
+            description="Stay online and new ride requests will appear here automatically."
+          />
         }>
-          <div class="space-y-4">
+          <div class="space-y-5">
             <For each={requests()}>{(req) => (
-              <Card class="animate-fade-in">
+              <Card class="animate-fade-in interactive-card" padding="lg">
                 <div class="flex items-start justify-between mb-4">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">

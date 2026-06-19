@@ -32,10 +32,10 @@ export default function DriverEarningsPage() {
 
   return (
     <MainLayout>
-      <div class="space-y-6">
+      <div class="page-section max-w-2xl">
         <div>
-          <h1 class="text-2xl font-bold text-text-primary">Earnings</h1>
-          <p class="text-text-secondary">Track your income and payouts</p>
+          <h1 class="heading-page text-2xl font-bold text-text-primary">Earnings</h1>
+          <p class="text-text-secondary mt-2 leading-relaxed">Track your income and payouts</p>
         </div>
 
         {/* Period selector */}

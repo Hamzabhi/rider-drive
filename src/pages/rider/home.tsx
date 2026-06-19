@@ -23,22 +23,22 @@ export default function RiderHomePage() {
 
   return (
     <MainLayout>
-      <div class="space-y-6">
+      <div class="page-section">
         {/* Welcome Section */}
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-bold text-text-primary">Hello, {user()?.firstName || 'Rider'}!</h1>
-            <p class="text-text-secondary">Where would you like to go today?</p>
+            <h1 class="heading-page text-2xl md:text-3xl font-bold text-text-primary">Hello, {user()?.firstName || 'Rider'}!</h1>
+            <p class="text-text-secondary mt-2 leading-relaxed">Where would you like to go today?</p>
           </div>
           <Avatar name={`${user()?.firstName || 'U'} ${user()?.lastName || ''}`} size="lg" />
         </div>
 
         {/* Quick Actions */}
-        <div class="grid grid-cols-4 gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <For each={quickActions}>{(action) => (
             <button
               onClick={() => navigate(action.path)}
-              class="flex flex-col items-center gap-2 p-4 bg-surface rounded-xl border border-border hover:border-primary transition-colors"
+              class="interactive-card flex flex-col items-center gap-3 p-5 bg-surface rounded-2xl border border-border dark:border-white/10 hover:border-primary/50"
             >
               <div class="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
                 <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,12 +75,12 @@ export default function RiderHomePage() {
 
         {/* Saved Locations */}
         <div>
-          <h2 class="text-lg font-semibold text-text-primary mb-3">Saved Locations</h2>
-          <div class="space-y-2">
+          <h2 class="heading-section text-lg font-semibold text-text-primary mb-4">Saved Locations</h2>
+          <div class="space-y-3">
             <For each={mockRider.savedLocations}>{(loc) => (
               <button
                 onClick={() => navigate('/rider/book')}
-                class="w-full flex items-center gap-3 p-3 bg-surface rounded-lg border border-border hover:border-primary transition-colors text-left"
+                class="interactive-card w-full flex items-center gap-4 p-4 bg-surface rounded-xl border border-border dark:border-white/10 hover:border-primary/50 text-left"
               >
                 <div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center">
                   <Show when={loc.type === 'home'} fallback={
@@ -105,13 +105,13 @@ export default function RiderHomePage() {
 
         {/* Recent Rides */}
         <div>
-          <div class="flex items-center justify-between mb-3">
-            <h2 class="text-lg font-semibold text-text-primary">Recent Rides</h2>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="heading-section text-lg font-semibold text-text-primary">Recent Rides</h2>
             <button onClick={() => navigate('/rider/history')} class="text-sm text-primary hover:underline">View All</button>
           </div>
           <div class="space-y-3">
             <For each={mockRides.slice(0, 2)}>{(ride) => (
-              <Card class="flex items-center gap-4">
+              <Card class="flex items-center gap-4 interactive-card" padding="lg">
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 mb-1">
                     <p class="font-medium text-text-primary truncate">{ride.pickup.address.split(',')[0]}</p>
@@ -131,8 +131,19 @@ export default function RiderHomePage() {
           </div>
         </div>
 
-        {/* Book Ride CTA */}
-        <Button class="w-full h-14 text-lg" onClick={() => navigate('/rider/book')}>
+        {/* Book Ride FAB */}
+        <div class="fixed bottom-8 right-6 md:right-10 z-20 lg:hidden">
+          <button
+            onClick={() => navigate('/rider/book')}
+            class="glass-fab interactive-card flex items-center gap-2 px-5 py-3.5 rounded-full text-primary font-semibold"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Book
+          </button>
+        </div>
+        <Button class="hidden lg:flex w-full h-14 text-lg" onClick={() => navigate('/rider/book')}>
           <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>

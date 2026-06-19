@@ -3,12 +3,16 @@ import { cn } from '@/utils/helpers';
 
 interface CardProps { variant?: 'elevated' | 'outlined' | 'filled'; padding?: 'none' | 'sm' | 'md' | 'lg'; class?: string; onClick?: () => void; hoverable?: boolean; }
 
-const variants = { elevated: 'bg-surface shadow-md', outlined: 'bg-surface border border-border', filled: 'bg-surface-variant' };
+const variants = {
+  elevated: 'bg-surface shadow-md dark:shadow-none dark:border dark:border-white/10',
+  outlined: 'bg-surface border border-border dark:border-white/10',
+  filled: 'bg-surface-variant',
+};
 const paddings = { none: '', sm: 'p-3', md: 'p-4', lg: 'p-6' };
 
 export const Card: ParentComponent<CardProps> = (props) => (
   <div class={cn('rounded-xl transition-all duration-200', variants[props.variant || 'elevated'],
-    paddings[props.padding || 'md'], props.hoverable && 'cursor-pointer hover:shadow-lg hover:-translate-y-0.5',
+    paddings[props.padding || 'md'], props.hoverable && 'cursor-pointer interactive-card',
     props.onClick && 'cursor-pointer', props.class)}
     onClick={props.onClick} role={props.onClick ? 'button' : undefined}>
     {props.children}

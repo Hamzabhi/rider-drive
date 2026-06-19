@@ -25,7 +25,7 @@ export class ApiError extends Error {
   }
 }
 
-function getToken(): string | null {
+export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
 
@@ -43,20 +43,21 @@ async function apiFetch<T>(
   path: string,
   options: { method?: string; body?: unknown; auth?: boolean } = {},
 ): Promise<T> {
-  const { method = 'GET', body, auth = true } = options;
+  const { method = 'GET', body } = options;
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  const token = getToken();
-  if (auth && token) headers.Authorization = `Bearer ${token}`;
 
+  // The session is an HttpOnly cookie (not readable by JS — defeats XSS token
+  // theft). `credentials: 'include'` sends it with every request; there is no
+  // Authorization header and nothing persisted client-side.
   const res = await fetch(`${API_BASE_URL}${path}`, {
     method,
     headers,
+    credentials: 'include',
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  // 401 -> clear token; UI's auth guard will redirect to /login.
-  if (res.status === 401 && getToken()) {
-    setToken(null);
+  // 401 -> session invalid/expired; UI's auth guard redirects to /login.
+  if (res.status === 401) {
     throw new ApiError(401, 'Session expired');
   }
 
@@ -108,7 +109,7 @@ export const authApi = {
     ),
 
   signup: (data: {
-    phone: string;
+    enrollment_token: string;
     first_name?: string;
     last_name?: string;
     role: 'rider' | 'driver';
@@ -123,6 +124,13 @@ export const authApi = {
     withFallback(
       () => apiFetch('/auth/login', { method: 'POST', body: { phone, password }, auth: false }),
       () => mockProvider.login(phone, password),
+    ),
+
+  // Clears the HttpOnly session cookie server-side.
+  logout: (): Promise<AuthResponse> =>
+    withFallback(
+      () => apiFetch('/auth/logout', { method: 'POST', auth: false }),
+      async () => ({ success: true }),
     ),
 };
 

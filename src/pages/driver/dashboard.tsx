@@ -1,7 +1,7 @@
 import { createSignal, Show, For, onMount, createEffect } from 'solid-js';
 import { MainLayout } from '@/layouts/main-layout';
 import { Button, Card } from '@/components/ui';
-import { Badge, Avatar, Spinner } from '@/components/ui/badge';
+import { Badge, Avatar, Spinner, Skeleton } from '@/components/ui/badge';
 import { driverStore, authStore, notificationStore } from '@/store';
 import { realtime } from '@/api/realtime';
 import { bidToDomain } from '@/api/dto';
@@ -67,9 +67,9 @@ export default function DriverDashboardPage() {
 
   return (
     <MainLayout>
-      <div class="space-y-6">
+      <div class="page-section">
         {/* Status Toggle */}
-        <Card class="flex items-center justify-between">
+        <Card class="flex items-center justify-between" padding="lg">
           <div class="flex items-center gap-4">
             <Avatar name={`${user?.firstName ?? 'Driver'} ${user?.lastName ?? ''}`} size="lg" />
             <div>
@@ -93,7 +93,7 @@ export default function DriverDashboardPage() {
         {/* Active Ride Request */}
         <Show when={activeRequest()} keyed>
           {(req) => (
-            <Card class="border-2 border-warning">
+            <Card class="border-2 border-warning interactive-card animate-slide-in-up" padding="lg">
               <div class="flex items-start justify-between mb-3">
                 <Badge variant="warning" size="sm" dot>New Request</Badge>
                 <span class="text-sm text-text-secondary">Offer expires in {req.data.expires_in}s</span>
@@ -142,17 +142,17 @@ export default function DriverDashboardPage() {
 
         {/* Earnings Summary */}
         <div>
-          <h2 class="text-lg font-semibold text-text-primary mb-3">Your Earnings</h2>
-          <div class="grid grid-cols-3 gap-4">
-            <Card>
+          <h2 class="heading-section text-lg font-semibold text-text-primary mb-4">Your Earnings</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <Card padding="lg" class="interactive-card">
               <p class="text-sm text-text-secondary">Today</p>
               <p class="text-xl font-bold text-text-primary mt-1">{formatCurrency(earnings.today)}</p>
             </Card>
-            <Card>
+            <Card padding="lg" class="interactive-card">
               <p class="text-sm text-text-secondary">This Week</p>
               <p class="text-xl font-bold text-text-primary mt-1">{formatCurrency(earnings.week)}</p>
             </Card>
-            <Card>
+            <Card padding="lg" class="interactive-card">
               <p class="text-sm text-text-secondary">This Month</p>
               <p class="text-xl font-bold text-text-primary mt-1">{formatCurrency(earnings.month)}</p>
             </Card>
@@ -162,7 +162,7 @@ export default function DriverDashboardPage() {
         {/* Recent Rides */}
         <Show when={driverStore.rides().length > 0}>
           <div>
-            <h2 class="text-lg font-semibold text-text-primary mb-3">Recent Rides</h2>
+            <h2 class="heading-section text-lg font-semibold text-text-primary mb-4">Recent Rides</h2>
             <div class="space-y-2">
               <For each={driverStore.rides()}>{(ride) => (
                 <Card padding="sm" class="flex items-center justify-between">
@@ -178,9 +178,14 @@ export default function DriverDashboardPage() {
         </Show>
 
         <Show when={driverStore.isOnline() && !activeRequest()}>
-          <div class="flex flex-col items-center justify-center py-12">
+          <div class="flex flex-col items-center justify-center py-16 px-6">
+            <div class="space-y-3 w-full max-w-sm mb-6">
+              <Skeleton class="h-4 w-full rounded-lg" />
+              <Skeleton class="h-4 w-48 mx-auto rounded-lg" />
+              <Skeleton class="h-24 w-full rounded-xl" />
+            </div>
             <Spinner size="md" />
-            <p class="text-text-secondary mt-4">Waiting for ride requests...</p>
+            <p class="text-text-secondary mt-4 text-center leading-relaxed">Waiting for ride requests...</p>
           </div>
         </Show>
       </div>

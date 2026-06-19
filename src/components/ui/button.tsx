@@ -11,12 +11,12 @@ interface ButtonProps {
 
 const variants: Record<Variant, string> = {
   primary: 'bg-primary text-text-inverse hover:bg-primary-600',
-  secondary: 'bg-secondary-100 text-secondary-700 hover:bg-secondary-200',
+  secondary: 'bg-secondary-100 text-secondary-700 hover:bg-secondary-200 dark:bg-secondary-800/50 dark:text-secondary-200 dark:hover:bg-secondary-700/50',
   success: 'bg-success text-text-inverse hover:bg-success-600',
   warning: 'bg-warning text-text-inverse hover:bg-warning-600',
   danger: 'bg-danger text-text-inverse hover:bg-danger-600',
   ghost: 'bg-transparent text-text-primary hover:bg-surface-variant',
-  outline: 'border-2 border-primary text-primary hover:bg-primary/10',
+  outline: 'border-2 border-primary text-primary hover:bg-primary/10 dark:hover:bg-primary/20',
 };
 
 const sizes: Record<Size, string> = {
@@ -27,7 +27,7 @@ const sizes: Record<Size, string> = {
 export const Button = (props: ButtonProps) => (
   <button type={props.type || 'button'}
     class={cn('inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200',
-      'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2',
+      'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background',
       'disabled:opacity-50 disabled:cursor-not-allowed',
       variants[props.variant || 'primary'], sizes[props.size || 'md'],
       props.isFullWidth && 'w-full', props.isLoading && 'cursor-wait', props.class)}

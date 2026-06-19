@@ -68,19 +68,19 @@ export default function TrackingPage() {
 
   return (
     <MainLayout>
-      <div class="max-w-lg mx-auto space-y-4">
+      <div class="max-w-lg mx-auto page-section">
         {/* Status header */}
-        <div class="text-center">
-          <h1 class="text-xl font-bold text-text-primary">
+        <div class="text-center pt-2">
+          <h1 class="heading-page text-2xl font-bold text-text-primary">
             {STATUS_STEPS.find(s => s.key === status())?.label}
           </h1>
-          <p class="text-sm text-text-secondary mt-0.5">
+          <p class="text-sm text-text-secondary mt-2 leading-relaxed">
             {STATUS_STEPS.find(s => s.key === status())?.desc}
           </p>
         </div>
 
         {/* Map placeholder */}
-        <div class="relative h-56 rounded-2xl overflow-hidden bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border border-border">
+        <div class="relative h-64 map-container bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20">
           {/* Fake map grid */}
           <svg class="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 400 220">
             <defs>
@@ -113,23 +113,31 @@ export default function TrackingPage() {
 
           {/* ETA badge */}
           <Show when={status() !== 'completed' && status() !== 'in_progress'}>
-            <div class="absolute top-3 left-1/2 -translate-x-1/2 bg-surface/90 backdrop-blur rounded-full px-4 py-1.5 shadow-lg flex items-center gap-2">
+            <div class="absolute top-4 left-1/2 -translate-x-1/2 map-overlay-pill rounded-full px-5 py-2 flex items-center gap-2 text-sm">
               <div class="w-2 h-2 bg-primary rounded-full animate-pulse" />
-              <span class="text-sm font-semibold text-text-primary">{eta()} min away</span>
+              <span>{eta()} min away</span>
             </div>
           </Show>
 
+          {/* Map FABs — recenter */}
+          <button type="button" class="absolute bottom-4 right-4 map-fab w-11 h-11 text-primary" aria-label="Recenter map">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </button>
+
           {/* Labels */}
-          <div class="absolute bottom-3 left-4 bg-surface/80 backdrop-blur px-2 py-1 rounded-lg text-xs text-success font-medium">
+          <div class="absolute bottom-4 left-4 map-overlay-pill px-3 py-1.5 rounded-xl text-xs text-success">
             Pickup
           </div>
-          <div class="absolute top-3 right-4 bg-surface/80 backdrop-blur px-2 py-1 rounded-lg text-xs text-danger font-medium">
+          <div class="absolute top-4 right-4 map-overlay-pill px-3 py-1.5 rounded-xl text-xs text-danger">
             Dropoff
           </div>
         </div>
 
         {/* Driver card */}
-        <Card class="flex items-center gap-4">
+        <Card class="flex items-center gap-5 p-5 interactive-card">
           <Avatar src={driver.avatar} name={`${driver.firstName} ${driver.lastName}`} size="lg" />
           <div class="flex-1 min-w-0">
             <p class="font-semibold text-text-primary">{driver.firstName} {driver.lastName}</p>
@@ -141,14 +149,14 @@ export default function TrackingPage() {
             </div>
             <p class="text-xs text-text-muted mt-0.5">{driver.vehicle.color} {driver.vehicle.make} {driver.vehicle.model} · {driver.vehicle.plateNumber}</p>
           </div>
-          <div class="flex flex-col gap-2">
-            <button class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center hover:bg-primary-200 transition-colors">
-              <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex flex-col gap-2.5">
+            <button type="button" class="map-fab w-11 h-11 text-primary" aria-label="Call driver">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
               </svg>
             </button>
-            <button class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors">
-              <svg class="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" class="map-fab w-11 h-11 text-text-secondary" aria-label="Message driver">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
               </svg>
             </button>
@@ -156,8 +164,8 @@ export default function TrackingPage() {
         </Card>
 
         {/* Status Progress */}
-        <Card>
-          <h3 class="text-sm font-semibold text-text-primary mb-4">Ride Progress</h3>
+        <Card padding="lg">
+          <h3 class="heading-section text-sm font-semibold text-text-primary mb-5">Ride Progress</h3>
           <div class="space-y-3">
             <For each={STATUS_STEPS}>{(step, i) => {
               const stepIdx = STATUS_ORDER.indexOf(step.key);
@@ -223,7 +231,7 @@ export default function TrackingPage() {
         {/* Rating Modal */}
         <Show when={showRating()}>
           <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-overlay">
-            <div class="w-full sm:max-w-sm bg-surface rounded-t-3xl sm:rounded-2xl shadow-2xl p-6 animate-slide-up">
+            <div class="w-full sm:max-w-sm glass-dropdown rounded-t-3xl sm:rounded-2xl p-8 animate-slide-in-up">
               <div class="text-center mb-6">
                 <Avatar src={driver.avatar} name={`${driver.firstName} ${driver.lastName}`} size="xl" class="mx-auto mb-3" />
                 <h2 class="text-xl font-bold text-text-primary">Rate your ride</h2>
@@ -239,7 +247,7 @@ export default function TrackingPage() {
                     class="transition-transform hover:scale-110"
                   >
                     <svg
-                      class={`w-10 h-10 transition-colors ${star <= (hoveredStar() || rating()) ? 'text-warning' : 'text-border'}`}
+                      class={`w-10 h-10 transition-colors ${star <= (hoveredStar() || rating()) ? 'text-warning' : 'text-text-muted'}`}
                       fill="currentColor" viewBox="0 0 20 20"
                     >
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>

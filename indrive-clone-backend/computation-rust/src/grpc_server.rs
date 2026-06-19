@@ -17,10 +17,21 @@ use indrive::{
     FareEstimate, FareRequest, FinalizeRequest, Point,
 };
 
-use crate::pricing::compute_fare;
+use crate::pricing::{compute_fare, coords_valid};
 
 #[derive(Default)]
 pub struct PricingEngineService;
+
+/// Sanity ceiling for a single trip distance (~2,000 km). Anything beyond this
+/// is almost certainly a buggy/malicious client, not a real ride.
+const MAX_TRIP_DISTANCE_M: f64 = 2_000_000.0;
+
+fn validate_point(p: &Point, which: &str) -> Result<(), Status> {
+    if !coords_valid(p.latitude, p.longitude) {
+        return Err(Status::invalid_argument(format!("{which} coordinates out of range")));
+    }
+    Ok(())
+}
 
 #[tonic::async_trait]
 impl PricingEngine for PricingEngineService {
@@ -31,6 +42,8 @@ impl PricingEngine for PricingEngineService {
 
         let pickup = pickup.ok_or_else(|| Status::invalid_argument("missing pickup"))?;
         let dropoff = dropoff.ok_or_else(|| Status::invalid_argument("missing dropoff"))?;
+        validate_point(&pickup, "pickup")?;
+        validate_point(&dropoff, "dropoff")?;
 
         let f = compute_fare(
             pickup.latitude, pickup.longitude,
@@ -47,6 +60,16 @@ impl PricingEngine for PricingEngineService {
             pickup, dropoff, actual_distance_meters, actual_duration_seconds,
             vehicle_type, currency,
         } = req.into_inner();
+
+        // The final billed amount comes straight from the client-supplied
+        // actual distance/time, so it MUST be bounds-checked — otherwise a
+        // crafted request can dictate an arbitrary charge.
+        if !actual_distance_meters.is_finite()
+            || actual_distance_meters < 0.0
+            || actual_distance_meters > MAX_TRIP_DISTANCE_M
+        {
+            return Err(Status::invalid_argument("actual_distance_meters out of range"));
+        }
 
         // Use the ACTUAL distance/time provided by the driver's odometer/timer
         // rather than the haversine estimate — this is the reconciled final fare.

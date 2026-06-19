@@ -45,6 +45,13 @@ export const mockProvider = {
   async verifyOtp(phone: string, code: string): Promise<AuthResponse> {
     await delay(500);
     if (code !== MOCK_OTP) return { success: false, error: 'Invalid or expired code' };
+    // Mirror the real flow: if a signup is in progress, return a (mock)
+    // enrollment token so the caller completes signup; otherwise treat it as
+    // an existing-user OTP login.
+    const enrolling = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('pending_signup');
+    if (enrolling) {
+      return { success: true, exists: false, enrollment_token: `mock-enrollment-${Date.now()}` };
+    }
     return {
       success: true,
       exists: true,
@@ -53,12 +60,12 @@ export const mockProvider = {
     };
   },
 
-  async signup(data: { phone: string; first_name?: string; last_name?: string; role: 'rider' | 'driver' }): Promise<AuthResponse> {
+  async signup(data: { enrollment_token: string; first_name?: string; last_name?: string; role: 'rider' | 'driver' }): Promise<AuthResponse> {
     await delay(700);
     return {
       success: true,
       token: `mock-token-${Date.now()}`,
-      user: { id: `mock-${data.phone}`, role: data.role },
+      user: { id: `mock-${Date.now()}`, role: data.role },
     };
   },
 

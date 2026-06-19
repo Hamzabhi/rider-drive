@@ -413,13 +413,13 @@ export function ThemeSettings() {
                             setActiveTab('colors');
                             setHasChanges(false);
                           }}
-                          class="px-3 py-1.5 rounded-lg bg-surface-variant text-text-secondary text-sm hover:bg-secondary-100 transition-colors"
+                          class="px-3 py-1.5 rounded-lg bg-surface-variant text-text-secondary text-sm hover:bg-secondary-100 dark:hover:bg-secondary-800/40 transition-colors"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDuplicate(theme.id)}
-                          class="px-3 py-1.5 rounded-lg bg-surface-variant text-text-secondary text-sm hover:bg-secondary-100 transition-colors"
+                          class="px-3 py-1.5 rounded-lg bg-surface-variant text-text-secondary text-sm hover:bg-secondary-100 dark:hover:bg-secondary-800/40 transition-colors"
                           title="Duplicate"
                         >
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -428,7 +428,7 @@ export function ThemeSettings() {
                         </button>
                         <button
                           onClick={() => handleDeleteCustom(theme.id)}
-                          class="px-3 py-1.5 rounded-lg bg-surface-variant text-danger text-sm hover:bg-danger-50 transition-colors"
+                          class="px-3 py-1.5 rounded-lg bg-surface-variant text-danger text-sm hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-colors"
                           title="Delete"
                         >
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

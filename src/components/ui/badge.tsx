@@ -5,9 +5,12 @@ import type { Size, Variant } from '@/types';
 interface BadgeProps { variant?: Variant | 'info'; size?: Size; dot?: boolean; class?: string; }
 
 const variants: Record<Variant | 'info', string> = {
-  primary: 'bg-primary-100 text-primary-700', secondary: 'bg-secondary-100 text-secondary-700',
-  info: 'bg-primary-100 text-primary-700', success: 'bg-success-100 text-success-700',
-  warning: 'bg-warning-100 text-warning-700', danger: 'bg-danger-100 text-danger-700',
+  primary: 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300',
+  secondary: 'bg-secondary-100 text-secondary-700 dark:bg-secondary-800/40 dark:text-secondary-300',
+  info: 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300',
+  success: 'bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-300',
+  warning: 'bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-300',
+  danger: 'bg-danger-100 text-danger-700 dark:bg-danger-900/30 dark:text-danger-300',
   ghost: 'bg-surface-variant text-text-secondary', outline: 'border border-current bg-transparent',
 };
 const sizes: Record<Size, string> = { xs: 'text-xs px-1.5 py-0.5', sm: 'text-xs px-2 py-0.5', md: 'text-sm px-2.5 py-0.5', lg: 'text-sm px-3 py-1', xl: 'text-base px-3.5 py-1' };
@@ -40,5 +43,5 @@ export const Spinner = (props: { size?: Size; class?: string }) => {
 };
 
 export const Skeleton = (props: { class?: string }) => (
-  <div class={cn('animate-pulse bg-surface-variant rounded h-4', props.class)}/>
+  <div class={cn('skeleton-shimmer rounded h-4', props.class)}/>
 );

@@ -18,6 +18,7 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	redisstore "indriveclone/realtime-go/internal/redis"
+	"indriveclone/realtime-go/internal/safe"
 	"indriveclone/realtime-go/internal/websocket"
 )
 
@@ -89,14 +90,14 @@ func (m *Manager) Open(ctx context.Context, rideId, riderId, vehicleType, curren
 
 	// Schedule expiry. Goroutine-per-window is fine: thousands of windows
 	// at once are trivial for the Go runtime (sub-MB per goroutine).
-	go func() {
+	safe.Go("bid-expiry:"+rideId, func() {
 		select {
 		case <-time.After(WindowTTL):
 			m.expire(rideId)
 		case <-wctx.Done():
 			// accepted or cancelled already; no-op
 		}
-	}()
+	})
 
 	// Mirror the open window into Redis so other processes see it.
 	_ = m.rdb.Set(ctx, "bid:window:"+rideId, riderId, WindowTTL).Err()
@@ -135,8 +136,8 @@ func (m *Manager) Submit(ctx context.Context, rideId, driverId string, amount fl
 	w.mu.Unlock()
 
 	// persist + push to rider
-	go m.persistBid(ctx, bid)
-	go m.notifyRider(w.RiderId, "bid_received", bid)
+	safe.Go("persistBid", func() { m.persistBid(ctx, bid) })
+	safe.Go("notifyRider:bid_received", func() { m.notifyRider(w.RiderId, "bid_received", bid) })
 
 	return bid, nil
 }
@@ -177,12 +178,17 @@ func (m *Manager) Accept(ctx context.Context, rideId, bidId, driverId string) (f
 	w.cancel()
 
 	// notify everyone over WS
-	go m.notifyDriver(driverId, "bid_accepted", map[string]any{
-		"ride_id": rideId, "bid_id": bidId, "fare": winner.Amount,
+	safe.Go("notifyDriver:bid_accepted", func() {
+		m.notifyDriver(driverId, "bid_accepted", map[string]any{
+			"ride_id": rideId, "bid_id": bidId, "fare": winner.Amount,
+		})
 	})
 	for _, l := range losers {
-		go m.notifyDriver(l.DriverId, "bid_lost", map[string]any{
-			"ride_id": rideId, "reason": "another_driver_accepted",
+		l := l
+		safe.Go("notifyDriver:bid_lost", func() {
+			m.notifyDriver(l.DriverId, "bid_lost", map[string]any{
+				"ride_id": rideId, "reason": "another_driver_accepted",
+			})
 		})
 	}
 	// clear the Redis marker
@@ -219,7 +225,8 @@ func (m *Manager) Cancel(ctx context.Context, rideId string) {
 	w.cancel()
 
 	for _, did := range driversToNotify {
-		go m.notifyDriver(did, "ride_cancelled", map[string]any{"ride_id": rideId})
+		did := did
+		safe.Go("notifyDriver:ride_cancelled", func() { m.notifyDriver(did, "ride_cancelled", map[string]any{"ride_id": rideId}) })
 	}
 	_ = m.rdb.Del(ctx, "bid:window:"+rideId).Err()
 
@@ -252,9 +259,10 @@ func (m *Manager) expire(rideId string) {
 
 	_ = m.rdb.Del(ctx, "bid:window:"+rideId).Err()
 	for _, did := range drivers {
-		go m.notifyDriver(did, "bid_expired", map[string]any{"ride_id": rideId})
+		did := did
+		safe.Go("notifyDriver:bid_expired", func() { m.notifyDriver(did, "bid_expired", map[string]any{"ride_id": rideId}) })
 	}
-	go m.notifyRider(w.RiderId, "bid_window_expired", map[string]any{"ride_id": rideId})
+	safe.Go("notifyRider:bid_window_expired", func() { m.notifyRider(w.RiderId, "bid_window_expired", map[string]any{"ride_id": rideId}) })
 
 	m.mu.Lock()
 	delete(m.windows, rideId)

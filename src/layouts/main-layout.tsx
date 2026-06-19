@@ -82,21 +82,21 @@ export const MainLayout: ParentComponent = (props) => {
 
       {/* Sidebar */}
       <aside class={cn(
-        'fixed top-0 left-0 z-30 h-full w-64 bg-surface border-r border-border flex flex-col transition-transform duration-300 lg:translate-x-0',
+        'fixed top-0 left-0 z-30 h-full w-64 glass-panel flex flex-col transition-transform duration-300 lg:translate-x-0',
         sidebarOpen() ? 'translate-x-0' : '-translate-x-full'
       )}>
         {/* Logo */}
-        <div class="flex items-center gap-3 h-16 px-5 border-b border-border flex-shrink-0">
+        <div class="flex items-center gap-3 h-16 px-5 border-b border-border dark:border-white/10 flex-shrink-0">
           <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-primary text-text-inverse shadow-md">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
           </div>
-          <span class="text-lg font-bold text-text-primary tracking-tight">RideFlow</span>
+          <span class="text-lg font-bold text-text-primary heading-section tracking-tight">RideFlow</span>
         </div>
 
         {/* User info strip */}
-        <div class="px-4 py-3 border-b border-border flex-shrink-0">
+        <div class="px-4 py-4 border-b border-border dark:border-white/10 flex-shrink-0">
           <div class="flex items-center gap-3">
             <Avatar name={`${user()?.firstName || 'U'} ${user()?.lastName || ''}`} size="sm" />
             <div class="min-w-0">
@@ -107,7 +107,7 @@ export const MainLayout: ParentComponent = (props) => {
         </div>
 
         {/* Nav */}
-        <nav class="flex-1 overflow-y-auto p-3 space-y-0.5">
+        <nav class="flex-1 overflow-y-auto p-4 space-y-1">
           <For each={navItems()}>{(item) => (
             <button
               onClick={() => { navigate(item.path); setSidebarOpen(false); }}
@@ -127,7 +127,7 @@ export const MainLayout: ParentComponent = (props) => {
         </nav>
 
         {/* Bottom actions */}
-        <div class="p-3 border-t border-border flex-shrink-0 space-y-0.5">
+        <div class="p-4 border-t border-border dark:border-white/10 flex-shrink-0 space-y-1">
           <button
             onClick={() => themeStore.toggle()}
             class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-text-secondary hover:bg-surface-variant transition-colors"
@@ -158,7 +158,7 @@ export const MainLayout: ParentComponent = (props) => {
       {/* Main */}
       <div class="lg:pl-64 flex flex-col min-h-screen">
         {/* Header */}
-        <header class="sticky top-0 z-10 h-16 bg-surface/95 backdrop-blur border-b border-border flex items-center gap-2 px-4">
+        <header class="sticky top-0 z-10 h-16 glass-header flex items-center gap-3 px-5 md:px-8">
           <button
             class="lg:hidden p-2 rounded-lg hover:bg-surface-variant"
             onClick={() => setSidebarOpen(true)}
@@ -170,7 +170,7 @@ export const MainLayout: ParentComponent = (props) => {
 
           {/* Page title from nav */}
           <div class="hidden sm:block">
-            <p class="text-sm font-semibold text-text-primary">
+            <p class="text-sm font-semibold text-text-primary heading-section">
               {navItems().find(n => n.path === location.pathname)?.label || 'RideFlow'}
             </p>
           </div>
@@ -194,7 +194,7 @@ export const MainLayout: ParentComponent = (props) => {
             </button>
 
             <Show when={notifOpen()}>
-              <div class="absolute right-0 mt-2 w-80 bg-surface rounded-xl shadow-xl border border-border overflow-hidden animate-scale-in">
+              <div class="absolute right-0 mt-2 w-80 glass-dropdown rounded-xl overflow-hidden animate-scale-in">
                 <div class="flex items-center justify-between px-4 py-3 border-b border-border">
                   <p class="font-semibold text-text-primary">Notifications</p>
                   <Show when={notificationStore.unreadCount() > 0}>
@@ -240,7 +240,7 @@ export const MainLayout: ParentComponent = (props) => {
             </button>
 
             <Show when={profileOpen()}>
-              <div class="absolute right-0 mt-2 w-52 bg-surface rounded-xl shadow-xl border border-border overflow-hidden animate-scale-in">
+              <div class="absolute right-0 mt-2 w-52 glass-dropdown rounded-xl overflow-hidden animate-scale-in">
                 <div class="px-4 py-3 border-b border-border">
                   <p class="text-sm font-semibold text-text-primary">{user()?.firstName} {user()?.lastName}</p>
                   <p class="text-xs text-text-muted mt-0.5">{user()?.email}</p>
@@ -271,7 +271,7 @@ export const MainLayout: ParentComponent = (props) => {
         </header>
 
         {/* Content */}
-        <main class="flex-1 p-4 md:p-6">{props.children}</main>
+        <main class="flex-1 p-6 md:p-8 lg:p-10">{props.children}</main>
       </div>
 
       {/* Close dropdowns on outside click */}

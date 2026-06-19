@@ -63,15 +63,31 @@ export default function VerifyOTPPage() {
         toast.add(res.error, 'error');
         return;
       }
+
+      // New phone: complete signup using the enrollment token + stashed form.
       if (!res.exists) {
-        // Should not happen since verifyOtp surfaces error first, but guard anyway.
-        return;
+        const pending = sessionStorage.getItem('pending_signup');
+        if (!res.enrollmentToken || !pending) {
+          // Verified a phone with no account and no signup in progress.
+          toast.add('No account found. Please sign up.', 'info');
+          navigate('/signup');
+          return;
+        }
+        const form = JSON.parse(pending) as { first_name?: string; last_name?: string; role: 'rider' | 'driver'; password?: string };
+        const signupRes = await authStore.signup({
+          enrollment_token: res.enrollmentToken,
+          phone: phone(),
+          first_name: form.first_name,
+          last_name: form.last_name,
+          role: form.role,
+          password: form.password,
+        });
+        if (!signupRes.success) { toast.add(signupRes.error ?? 'Signup failed', 'error'); return; }
+        sessionStorage.removeItem('pending_signup');
       }
 
       if (!authStore.isAuthenticated()) {
-        // User doesn't exist yet — route to signup.
-        toast.add('No account found. Please sign up.', 'info');
-        navigate('/signup');
+        toast.add('Could not establish a session. Please try again.', 'error');
         return;
       }
 
@@ -130,7 +146,7 @@ export default function VerifyOTPPage() {
                 value={otp()[index()]}
                 onInput={(e) => handleChange(index(), e.currentTarget.value)}
                 onKeyDown={(e) => handleKeyDown(index(), e)}
-                class="w-12 h-12 text-center text-lg font-semibold border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-surface text-text-primary"
+                class="w-12 h-12 text-center text-lg font-semibold border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-bg-input text-text-primary transition-colors"
               />
             )}</For>
           </div>

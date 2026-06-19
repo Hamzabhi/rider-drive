@@ -44,15 +44,15 @@ export default function RiderSettingsPage() {
 
   return (
     <MainLayout>
-      <div class="max-w-2xl mx-auto space-y-6">
+      <div class="max-w-2xl mx-auto page-section">
         <div>
-          <h1 class="text-2xl font-bold text-text-primary">Settings</h1>
-          <p class="text-text-secondary">Manage your account preferences</p>
+          <h1 class="heading-page text-2xl font-bold text-text-primary">Settings</h1>
+          <p class="text-text-secondary mt-2 leading-relaxed">Manage your account preferences</p>
         </div>
 
         {/* Profile */}
-        <Card>
-          <h2 class="text-lg font-semibold text-text-primary mb-4">Profile</h2>
+        <Card padding="lg">
+          <h2 class="heading-section text-lg font-semibold text-text-primary mb-5">Profile</h2>
           <div class="flex items-center gap-4 mb-6">
             <Avatar src={mockRider.avatar} name={`${mockRider.firstName} ${mockRider.lastName}`} size="xl" />
             <div>
@@ -73,8 +73,8 @@ export default function RiderSettingsPage() {
         </Card>
 
         {/* Theme */}
-        <Card>
-          <h2 class="text-lg font-semibold text-text-primary mb-4">Appearance</h2>
+        <Card padding="lg">
+          <h2 class="heading-section text-lg font-semibold text-text-primary mb-5">Appearance</h2>
           <div class="flex items-center justify-between">
             <div>
               <p class="font-medium text-text-primary">Dark Mode</p>

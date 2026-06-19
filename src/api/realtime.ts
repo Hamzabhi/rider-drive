@@ -68,6 +68,10 @@ function connect(role: 'rider' | 'driver', id: string): void {
   currentRole = role;
   currentId = id;
 
+  // The realtime service authenticates the connection from the HttpOnly
+  // session cookie, which the browser sends automatically on the WS handshake
+  // (same-origin / proxied deployments). The id is derived from the verified
+  // token server-side; we still pass ?id for logging/back-compat.
   const url = `${wsBaseUrl()}/ws/${role === 'driver' ? 'drivers' : 'riders'}?id=${encodeURIComponent(id)}`;
   try {
     socket = new WebSocket(url);

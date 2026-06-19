@@ -41,7 +41,7 @@ export default function WalletPage() {
 
   return (
     <MainLayout>
-      <div class="max-w-2xl mx-auto space-y-6">
+      <div class="max-w-2xl mx-auto page-section">
         {/* Balance Card */}
         <Card class="bg-gradient-to-r from-primary-500 to-primary-700 text-text-inverse border-none">
           <p class="text-sm opacity-80">Available Balance</p>

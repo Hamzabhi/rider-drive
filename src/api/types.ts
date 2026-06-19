@@ -16,6 +16,8 @@ export interface BackendUser {
 export interface AuthResponse {
   success: boolean;
   exists?: boolean;
+  /** Short-lived token from /otp/verify (unknown phone) required by /signup. */
+  enrollment_token?: string;
   token?: string;
   user?: { id: string; role: 'rider' | 'driver' | 'admin' };
   error?: string;

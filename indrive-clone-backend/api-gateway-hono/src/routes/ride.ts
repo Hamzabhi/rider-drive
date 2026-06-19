@@ -90,6 +90,13 @@ rideRoutes.post("/request", async (c) => {
 // =========================================================================
 rideRoutes.get("/:id/bids", async (c) => {
   const rideId = c.req.param("id");
+  const user = c.get("user") as any;
+
+  // Ownership check: only the rider who created the ride may read its bids.
+  // Returns 404 (not 403) so we don't confirm the existence of others' rides.
+  const owner = await pool.query("SELECT 1 FROM rides WHERE id = $1 AND rider_id = $2", [rideId, user.sub]);
+  if (owner.rowCount === 0) return c.json({ success: false, error: "Ride not found" }, 404);
+
   const { rows } = await pool.query(
     `SELECT b.id, b.driver_id, b.amount, b.eta_seconds, b.currency, b.status, b.expires_at
        FROM bids b WHERE b.ride_id = $1 AND b.status = 'pending'
@@ -107,29 +114,57 @@ rideRoutes.get("/:id/bids", async (c) => {
 // =========================================================================
 rideRoutes.post("/:id/accept-bid", async (c) => {
   const rideId = c.req.param("id");
-  const body = z.object({ bid_id: z.string().uuid(), driver_id: z.string().uuid() }).parse(await c.req.json());
+  const user = c.get("user") as any;
+  // driver_id is NO LONGER trusted from the body — it is derived from the bid
+  // row, so a caller can't assign an arbitrary driver.
+  const body = z.object({ bid_id: z.string().uuid() }).parse(await c.req.json());
 
-  const ack = await matchingRpc.acceptBid({
-    rideId, bidId: body.bid_id, driverId: body.driver_id,
-  });
+  // Authorize: the ride must be owned by the caller and still searching, and
+  // the bid must belong to this ride and be pending. This closes the IDOR.
+  const ride = await pool.query(
+    "SELECT 1 FROM rides WHERE id = $1 AND rider_id = $2 AND status = 'searching'",
+    [rideId, user.sub],
+  );
+  if (ride.rowCount === 0) return c.json({ success: false, error: "Ride not found / not acceptable" }, 404);
 
-  if (ack.success) {
-    await pool.query(
-      `UPDATE rides
-          SET status='assigned', driver_id=$2, agreed_fare=$3, updated_at=now()
+  const bid = await pool.query(
+    "SELECT driver_id FROM bids WHERE id = $1 AND ride_id = $2 AND status = 'pending'",
+    [body.bid_id, rideId],
+  );
+  if (bid.rowCount === 0) return c.json({ success: false, error: "Bid not found" }, 404);
+  const driverId: string = bid.rows[0].driver_id;
+
+  const ack = await matchingRpc.acceptBid({ rideId, bidId: body.bid_id, driverId });
+  if (!ack.success) {
+    return c.json({ success: false, ride_id: rideId, error: "Could not accept bid" }, 409);
+  }
+
+  // Persist atomically: ride assignment + bid status changes in one transaction.
+  // (pg rejects multiple commands in a single parameterized query, so these
+  // are separate statements within an explicit BEGIN/COMMIT.)
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(
+      `UPDATE rides SET status='assigned', driver_id=$2, agreed_fare=$3, updated_at=now()
         WHERE id=$1 AND status='searching'`,
-      [rideId, body.driver_id, ack.agreedFare],
+      [rideId, driverId, ack.agreedFare],
     );
-    await pool.query(
-      `UPDATE bids SET status='accepted' WHERE id=$1;
-       UPDATE bids SET status='expired'
-        WHERE ride_id=$2 AND id<>$1 AND status='pending'`,
+    await client.query("UPDATE bids SET status='accepted' WHERE id=$1", [body.bid_id]);
+    await client.query(
+      "UPDATE bids SET status='expired' WHERE ride_id=$2 AND id<>$1 AND status='pending'",
       [body.bid_id, rideId],
     );
+    await client.query("COMMIT");
+  } catch (e) {
+    await client.query("ROLLBACK");
+    throw e;
+  } finally {
+    client.release();
   }
 
   return c.json({
-    success: ack.success,
+    success: true,
     ride_id: rideId,
     assigned_driver_id: ack.assignedDriverId,
     agreed_fare: ack.agreedFare,
