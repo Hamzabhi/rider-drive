@@ -1,0 +1,26 @@
+{
+  "name": "indrive-api-gateway",
+  "version": "1.0.0",
+  "description": "InDrive Clone — API Gateway & Auth (Hono.js + Bun)",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts",
+    "proto": "bun run scripts/gen-proto.ts"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.10.0",
+    "@grpc/proto-loader": "^0.7.12",
+    "hono": "^4.4.0",
+    "@hono/node-server": "^1.11.0",
+    "pg": "^8.11.5",
+    "ioredis": "^5.4.1",
+    "jose": "^5.3.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.5",
+    "@types/node": "^20.12.0",
+    "typescript": "^5.4.0"
+  }
+}
