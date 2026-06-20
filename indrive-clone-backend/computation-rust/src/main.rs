@@ -93,7 +93,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         axum::serve(listener, app).await.unwrap();
     };
 
-    let grpc_fut = grpc_server::run(&grpc_addr);
+    let grpc_fut = grpc_server::run(grpc_addr);
 
     tokio::try_join!(tokio::spawn(http_fut), tokio::spawn(grpc_fut))?;
     Ok(())

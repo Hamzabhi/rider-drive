@@ -11,9 +11,6 @@ import (
 	ws "github.com/coder/websocket"
 
 	"indriveclone/realtime-go/internal/auth"
-	redisstore "indriveclone/realtime-go/internal/redis"
-	"indriveclone/realtime-go/internal/bids"
-	"indriveclone/realtime-go/internal/matching"
 	"indriveclone/realtime-go/internal/safe"
 	wshub "indriveclone/realtime-go/internal/websocket"
 )

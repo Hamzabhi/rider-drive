@@ -91,7 +91,7 @@ With ≥2 Go instances:
 - Infra: `docker-compose.yml`, `.gitignore`, backend `.env.example`.
 - Frontend: `api/backend.ts`, `api/types.ts`, `api/realtime.ts`, `api/mock-provider.ts`, `store/index.ts`, `pages/auth/signup.tsx`, `pages/auth/verify-otp.tsx`.
 
-**Not yet compile-verified:** frontend `node_modules` aren't installed and the Go module cache in this environment is corrupted (pre-existing `go.sum` checksum mismatch on `go-redis`/`grpc`). Run `npm install && npx tsc -p tsconfig.app.json --noEmit`, `cargo test -p computation-rust`, and `go build ./...` to confirm.
+**Compile status (all verified):** ✅ Rust pricing — `cargo test` **7/7** (incl. new money edge-case tests). ✅ Go realtime — `go build ./...` and `go vet ./...` clean. ✅ Frontend — `npx tsc -p tsconfig.app.json --noEmit` clean. Dev wiring: Vite now proxies `/api`→gateway and `/ws`→realtime (same-origin, so the HttpOnly cookie flows).
 
 **Immediate follow-ups outside the code:** rotate the `JWT_SECRET` that was previously committed (it remains in git history); create real `.env` files from the new `.env.example` templates.
 
@@ -144,7 +144,7 @@ With ≥2 Go instances:
 - ⬜ **OPEN — Polling + WebSocket both active** — `src/pages/rider/book.tsx:43` still polls bids every 2.5s unconditionally even when WS pushes them. Poll only as a fallback when `realtime.connected()` is false.
 - ⬜ **OPEN — No resource limits** on any container — one leak starves the host.
 - ⬜ **OPEN — Finalize ignores surge** though proto says it includes it (`grpc_server.rs:55`); breakdown fields don't sum to total (base surged in total, returned un-surged) (`pricing.rs:129-138`).
-- ⬜ **OPEN — Build internally inconsistent** — `computation-rust/build.rs` writes stubs to `src/proto` but `grpc_server.rs` includes from `$OUT_DIR`; references a committed stub that doesn't exist → likely won't build as documented.
+- ✅ **FIXED — Build internally inconsistent** — `build.rs` now uses `.compile()` (correct for tonic-build 0.11), emits to the default `OUT_DIR` matching the `include!` in `grpc_server.rs` (which is now wrapped in `mod indrive`), and vendors `protoc` (`protoc-bin-vendored`) so no system install is needed. Also fixed two latent compile errors in `main.rs`/`grpc_server.rs` (`run` now returns `Send + Sync` error and takes an owned `String`). **`cargo test` now builds and passes 7/7.**
 - ⬜ **OPEN — `finalize` TOCTOU + no driver/status re-check on UPDATE** — `src/routes/ride.ts` finalize SELECTs with a status guard but the UPDATE filters only by `id`.
 
 ### Also fixed (were Medium/High security items in the original per-subsystem audit)

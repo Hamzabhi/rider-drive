@@ -62,7 +62,7 @@ func (h *Hub) Unregister(c *Client) {
 	case "driver":
 		delete(h.drivers, c.ID)
 		// mark offline so matching won't dispatch to a dead socket
-		_ = h.rdb.SetDriverStatusOnline(context.Background(), c.ID, 0).Err()
+		_ = h.rdb.SetDriverStatusOnline(context.Background(), c.ID, 0)
 	case "rider":
 		delete(h.riders, c.ID)
 	}

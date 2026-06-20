@@ -25,3 +25,5 @@ serde_json = "1"
 
 [build-dependencies]
 tonic-build = "0.11"
+# Vendored protoc binary so the build needs no system protobuf-compiler.
+protoc-bin-vendored = "3"

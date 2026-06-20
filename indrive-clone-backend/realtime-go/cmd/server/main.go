@@ -31,6 +31,7 @@ import (
 	"indriveclone/realtime-go/internal/handlers"
 	"indriveclone/realtime-go/internal/matching"
 	redisstore "indriveclone/realtime-go/internal/redis"
+	"indriveclone/realtime-go/internal/safe"
 	wshub "indriveclone/realtime-go/internal/websocket"
 	indrivepb "indriveclone/realtime-go/proto"
 )
@@ -59,8 +60,8 @@ func main() {
 
 	// --- HTTP server for the WebSocket endpoint ---
 	mux := http.NewServeMux()
-	mux.HandleFunc("/ws/drivers", handlers.DriverWS(hub))
-	mux.HandleFunc("/ws/riders", handlers.RiderWS(hub))
+	mux.Handle("/ws/drivers", handlers.DriverWS(hub))
+	mux.Handle("/ws/riders", handlers.RiderWS(hub))
 	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"status":"ok","service":"realtime-go"}`))
@@ -77,7 +78,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("grpc listen: %v", err)
 	}
-	grpcSrv := grpc.NewServer()
+	// Recovery interceptor: a panic in any handler becomes an INTERNAL error
+	// instead of crashing the whole process.
+	grpcSrv := grpc.NewServer(grpc.UnaryInterceptor(safe.UnaryRecoveryInterceptor()))
 	// gRPC handler implements indrivepb.RideMatchingServer
 	indrivepb.RegisterRideMatchingServer(grpcSrv, handlers.NewMatchingGRPC(matchSvc, bidMgr, hub))
 
