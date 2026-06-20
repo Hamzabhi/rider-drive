@@ -1,15 +1,15 @@
 // indrive realtime-go: WebSocket server + gRPC RideMatching service.
 //
 // Responsibilities:
-//   1. Accept driver WebSocket connections and ingest location updates
-//      (lat/lng every ~3s) -> Redis GEOADD.
-//   2. Serve the RideMatching gRPC service consumed by api-gateway-hono:
-//        - CreateRideRequest: Redis GEORADIUS to find nearby drivers,
-//          push the request to each via its WebSocket.
-//        - SubmitDriverBid:   store the counter-offer in Redis + Postgres
-//          (via HTTP callback to gateway) and broadcast it to the rider.
-//        - AcceptBid:         lock the driver + notify losers to withdraw.
-//        - CancelRideRequest: notify all bidders to stop.
+//  1. Accept driver WebSocket connections and ingest location updates
+//     (lat/lng every ~3s) -> Redis GEOADD.
+//  2. Serve the RideMatching gRPC service consumed by api-gateway-hono:
+//     - CreateRideRequest: Redis GEORADIUS to find nearby drivers,
+//     push the request to each via its WebSocket.
+//     - SubmitDriverBid:   store the counter-offer in Redis + Postgres
+//     (via HTTP callback to gateway) and broadcast it to the rider.
+//     - AcceptBid:         lock the driver + notify losers to withdraw.
+//     - CancelRideRequest: notify all bidders to stop.
 //
 // The bid exchange is the heart of the InDrive model: rider posts a price,
 // drivers counter-offer in real time, rider picks one.
@@ -25,16 +25,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 
-	indrivepb "indriveclone/realtime-go/proto"
 	"indriveclone/realtime-go/internal/bids"
 	"indriveclone/realtime-go/internal/handlers"
 	"indriveclone/realtime-go/internal/matching"
 	redisstore "indriveclone/realtime-go/internal/redis"
-	"indriveclone/realtime-go/internal/safe"
 	wshub "indriveclone/realtime-go/internal/websocket"
+	indrivepb "indriveclone/realtime-go/proto"
 )
 
 func main() {
@@ -79,9 +77,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("grpc listen: %v", err)
 	}
-	// Recovery interceptor: a panic in any handler becomes an INTERNAL error
-	// instead of crashing the whole process.
-	grpcSrv := grpc.NewServer(grpc.UnaryInterceptor(safe.UnaryRecoveryInterceptor()))
+	grpcSrv := grpc.NewServer()
 	// gRPC handler implements indrivepb.RideMatchingServer
 	indrivepb.RegisterRideMatchingServer(grpcSrv, handlers.NewMatchingGRPC(matchSvc, bidMgr, hub))
 
